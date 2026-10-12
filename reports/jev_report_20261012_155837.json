@@ -1,0 +1,21 @@
+{
+  "application": "JEV Finance",
+  "version": "1.0.0",
+  "created_at": "2026-10-12T15:58:37.549289+07:00",
+  "input_source": "built_in_sample",
+  "status": "completed",
+  "agent": "finance",
+  "condition": "invoice_anomaly",
+  "tool": "invoice_anomaly",
+  "input_count": 2,
+  "threshold": 0.15,
+  "result": {
+    "count": 1,
+    "anomalies": [
+      {
+        "invoice_id": "INV001",
+        "deviation": 0.2
+      }
+    ]
+  }
+}

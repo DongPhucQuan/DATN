@@ -1,0 +1,12 @@
+﻿[
+  {
+    "invoice_id": "INV_NORMAL",
+    "expected_price": 100000000,
+    "actual_price": 102000000
+  },
+  {
+    "invoice_id": "INV_ANOMALY",
+    "expected_price": 100000000,
+    "actual_price": 300000000
+  }
+]

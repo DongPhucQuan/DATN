@@ -1,0 +1,15 @@
+{
+  "threshold": 0.15,
+  "invoices": [
+    {
+      "invoice_id": "INV001",
+      "expected_price": 100,
+      "actual_price": 120
+    },
+    {
+      "invoice_id": "INV002",
+      "expected_price": 100,
+      "actual_price": 105
+    }
+  ]
+}
