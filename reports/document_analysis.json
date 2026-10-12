@@ -1,0 +1,457 @@
+{
+  "project": "JEV Document Analyst",
+  "generated_at": "2026-10-12T23:02:00.870970+07:00",
+  "status": "completed",
+  "document_count": 3,
+  "documents": [
+    {
+      "filename": "XD.BM.03A - Tai lieu MRD.docx",
+      "document_type": "MRD",
+      "status": "template_or_incomplete",
+      "paragraph_count": 90,
+      "table_count": 10,
+      "word_count": 1556,
+      "placeholders": [
+        "\\bnêu rõ\\b",
+        "\\bđưa ra kế hoạch\\b",
+        "\\bchi tiết .* phụ lục\\b"
+      ],
+      "instruction_count": 3,
+      "topic_coverage": {
+        "product_requirements": {
+          "label": "Yêu cầu và mô tả sản phẩm",
+          "keywords_found": [
+            "yêu cầu sản phẩm",
+            "tính năng",
+            "khách hàng"
+          ],
+          "keyword_count": 3,
+          "keyword_total": 3,
+          "status": "keywords_found"
+        },
+        "technology": {
+          "label": "Công nghệ lõi và công nghệ phát triển",
+          "keywords_found": [
+            "công nghệ",
+            "sản phẩm"
+          ],
+          "keyword_count": 2,
+          "keyword_total": 2,
+          "status": "keywords_found"
+        },
+        "schedule": {
+          "label": "Lộ trình và thời gian thực hiện",
+          "keywords_found": [
+            "lộ trình sản phẩm",
+            "mốc phát triển"
+          ],
+          "keyword_count": 2,
+          "keyword_total": 2,
+          "status": "keywords_found"
+        },
+        "finance": {
+          "label": "Kinh phí và hiệu quả kinh tế",
+          "keywords_found": [
+            "chi phí nghiên cứu",
+            "điểm hoàn vốn",
+            "hiệu quả kinh doanh"
+          ],
+          "keyword_count": 3,
+          "keyword_total": 3,
+          "status": "keywords_found"
+        },
+        "market": {
+          "label": "Thị trường và hiệu quả dự kiến",
+          "keywords_found": [
+            "thị trường mục tiêu",
+            "khách hàng",
+            "phân khúc thị trường"
+          ],
+          "keyword_count": 3,
+          "keyword_total": 3,
+          "status": "keywords_found"
+        }
+      }
+    },
+    {
+      "filename": "XD.BM.03B - Tai lieu PRD.docx",
+      "document_type": "PRD",
+      "status": "template_or_incomplete",
+      "paragraph_count": 39,
+      "table_count": 3,
+      "word_count": 445,
+      "placeholders": [
+        "\\bnêu rõ\\b",
+        "\\bliệt kê\\b"
+      ],
+      "instruction_count": 2,
+      "topic_coverage": {
+        "product_requirements": {
+          "label": "Yêu cầu và mô tả sản phẩm",
+          "keywords_found": [
+            "tính năng",
+            "chỉ tiêu",
+            "kỹ thuật"
+          ],
+          "keyword_count": 3,
+          "keyword_total": 3,
+          "status": "keywords_found"
+        },
+        "technology": {
+          "label": "Công nghệ lõi và công nghệ phát triển",
+          "keywords_found": [
+            "công nghệ lõi",
+            "công nghệ sử dụng"
+          ],
+          "keyword_count": 2,
+          "keyword_total": 2,
+          "status": "keywords_found"
+        },
+        "schedule": {
+          "label": "Lộ trình và thời gian thực hiện",
+          "keywords_found": [
+            "phiên bản tiếp theo"
+          ],
+          "keyword_count": 1,
+          "keyword_total": 1,
+          "status": "keywords_found"
+        },
+        "finance": {
+          "label": "Kinh phí và hiệu quả kinh tế",
+          "keywords_found": [],
+          "keyword_count": 0,
+          "keyword_total": 0,
+          "status": "not_applicable"
+        },
+        "market": {
+          "label": "Thị trường và hiệu quả dự kiến",
+          "keywords_found": [
+            "so sánh với các sản phẩm trên thế giới"
+          ],
+          "keyword_count": 1,
+          "keyword_total": 1,
+          "status": "keywords_found"
+        }
+      }
+    },
+    {
+      "filename": "XD.BM.02A - TTr chu truong cap co so_short.docx",
+      "document_type": "PROPOSAL",
+      "status": "template_or_incomplete",
+      "paragraph_count": 77,
+      "table_count": 6,
+      "word_count": 1227,
+      "placeholders": [
+        "\\.{3,}",
+        "\\b201\\s*\\.\\s*\\.\\s*\\.",
+        "\\btên nhiệm vụ\\b",
+        "\\bnêu rõ\\b",
+        "\\bnêu mục tiêu\\b",
+        "\\bchi tiết .* phụ lục\\b"
+      ],
+      "instruction_count": 3,
+      "topic_coverage": {
+        "product_requirements": {
+          "label": "Yêu cầu và mô tả sản phẩm",
+          "keywords_found": [
+            "sản phẩm",
+            "chỉ tiêu kỹ thuật",
+            "mục tiêu"
+          ],
+          "keyword_count": 3,
+          "keyword_total": 3,
+          "status": "keywords_found"
+        },
+        "technology": {
+          "label": "Công nghệ lõi và công nghệ phát triển",
+          "keywords_found": [
+            "công nghệ lõi",
+            "làm chủ"
+          ],
+          "keyword_count": 2,
+          "keyword_total": 2,
+          "status": "keywords_found"
+        },
+        "schedule": {
+          "label": "Lộ trình và thời gian thực hiện",
+          "keywords_found": [
+            "thời gian thực hiện",
+            "mốc chính",
+            "kế hoạch thực hiện"
+          ],
+          "keyword_count": 3,
+          "keyword_total": 3,
+          "status": "keywords_found"
+        },
+        "finance": {
+          "label": "Kinh phí và hiệu quả kinh tế",
+          "keywords_found": [
+            "kinh phí dự kiến",
+            "hiệu quả kinh tế",
+            "tổng kinh phí"
+          ],
+          "keyword_count": 3,
+          "keyword_total": 3,
+          "status": "keywords_found"
+        },
+        "market": {
+          "label": "Thị trường và hiệu quả dự kiến",
+          "keywords_found": [
+            "thị trường và hiệu quả",
+            "nhu cầu của thị trường"
+          ],
+          "keyword_count": 2,
+          "keyword_total": 2,
+          "status": "keywords_found"
+        }
+      }
+    }
+  ],
+  "cross_document_checks": [
+    {
+      "topic_id": "product_requirements",
+      "topic": "Yêu cầu và mô tả sản phẩm",
+      "status": "keyword_coverage_only",
+      "explanation": "Đã kiểm tra độ phủ từ khóa theo cấu hình. Kết quả không chứng minh nội dung đầy đủ, đúng hoặc nhất quán về ngữ nghĩa.",
+      "documents": [
+        {
+          "document_type": "MRD",
+          "filename": "XD.BM.03A - Tai lieu MRD.docx",
+          "keywords": [
+            "yêu cầu sản phẩm",
+            "tính năng",
+            "khách hàng"
+          ],
+          "found": [
+            "yêu cầu sản phẩm",
+            "tính năng",
+            "khách hàng"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PRD",
+          "filename": "XD.BM.03B - Tai lieu PRD.docx",
+          "keywords": [
+            "tính năng",
+            "chỉ tiêu",
+            "kỹ thuật"
+          ],
+          "found": [
+            "tính năng",
+            "chỉ tiêu",
+            "kỹ thuật"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PROPOSAL",
+          "filename": "XD.BM.02A - TTr chu truong cap co so_short.docx",
+          "keywords": [
+            "sản phẩm",
+            "chỉ tiêu kỹ thuật",
+            "mục tiêu"
+          ],
+          "found": [
+            "sản phẩm",
+            "chỉ tiêu kỹ thuật",
+            "mục tiêu"
+          ],
+          "coverage": "found"
+        }
+      ]
+    },
+    {
+      "topic_id": "technology",
+      "topic": "Công nghệ lõi và công nghệ phát triển",
+      "status": "keyword_coverage_only",
+      "explanation": "Đã kiểm tra độ phủ từ khóa theo cấu hình. Kết quả không chứng minh nội dung đầy đủ, đúng hoặc nhất quán về ngữ nghĩa.",
+      "documents": [
+        {
+          "document_type": "MRD",
+          "filename": "XD.BM.03A - Tai lieu MRD.docx",
+          "keywords": [
+            "công nghệ",
+            "sản phẩm"
+          ],
+          "found": [
+            "công nghệ",
+            "sản phẩm"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PRD",
+          "filename": "XD.BM.03B - Tai lieu PRD.docx",
+          "keywords": [
+            "công nghệ lõi",
+            "công nghệ sử dụng"
+          ],
+          "found": [
+            "công nghệ lõi",
+            "công nghệ sử dụng"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PROPOSAL",
+          "filename": "XD.BM.02A - TTr chu truong cap co so_short.docx",
+          "keywords": [
+            "công nghệ lõi",
+            "làm chủ"
+          ],
+          "found": [
+            "công nghệ lõi",
+            "làm chủ"
+          ],
+          "coverage": "found"
+        }
+      ]
+    },
+    {
+      "topic_id": "schedule",
+      "topic": "Lộ trình và thời gian thực hiện",
+      "status": "keyword_coverage_only",
+      "explanation": "Đã kiểm tra độ phủ từ khóa theo cấu hình. Kết quả không chứng minh nội dung đầy đủ, đúng hoặc nhất quán về ngữ nghĩa.",
+      "documents": [
+        {
+          "document_type": "MRD",
+          "filename": "XD.BM.03A - Tai lieu MRD.docx",
+          "keywords": [
+            "lộ trình sản phẩm",
+            "mốc phát triển"
+          ],
+          "found": [
+            "lộ trình sản phẩm",
+            "mốc phát triển"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PRD",
+          "filename": "XD.BM.03B - Tai lieu PRD.docx",
+          "keywords": [
+            "phiên bản tiếp theo"
+          ],
+          "found": [
+            "phiên bản tiếp theo"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PROPOSAL",
+          "filename": "XD.BM.02A - TTr chu truong cap co so_short.docx",
+          "keywords": [
+            "thời gian thực hiện",
+            "mốc chính",
+            "kế hoạch thực hiện"
+          ],
+          "found": [
+            "thời gian thực hiện",
+            "mốc chính",
+            "kế hoạch thực hiện"
+          ],
+          "coverage": "found"
+        }
+      ]
+    },
+    {
+      "topic_id": "finance",
+      "topic": "Kinh phí và hiệu quả kinh tế",
+      "status": "keyword_coverage_only",
+      "explanation": "Đã kiểm tra độ phủ từ khóa theo cấu hình. Kết quả không chứng minh nội dung đầy đủ, đúng hoặc nhất quán về ngữ nghĩa.",
+      "documents": [
+        {
+          "document_type": "MRD",
+          "filename": "XD.BM.03A - Tai lieu MRD.docx",
+          "keywords": [
+            "chi phí nghiên cứu",
+            "điểm hoàn vốn",
+            "hiệu quả kinh doanh"
+          ],
+          "found": [
+            "chi phí nghiên cứu",
+            "điểm hoàn vốn",
+            "hiệu quả kinh doanh"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PRD",
+          "filename": "XD.BM.03B - Tai lieu PRD.docx",
+          "keywords": [],
+          "found": [],
+          "coverage": "not_applicable"
+        },
+        {
+          "document_type": "PROPOSAL",
+          "filename": "XD.BM.02A - TTr chu truong cap co so_short.docx",
+          "keywords": [
+            "kinh phí dự kiến",
+            "hiệu quả kinh tế",
+            "tổng kinh phí"
+          ],
+          "found": [
+            "kinh phí dự kiến",
+            "hiệu quả kinh tế",
+            "tổng kinh phí"
+          ],
+          "coverage": "found"
+        }
+      ]
+    },
+    {
+      "topic_id": "market",
+      "topic": "Thị trường và hiệu quả dự kiến",
+      "status": "keyword_coverage_only",
+      "explanation": "Đã kiểm tra độ phủ từ khóa theo cấu hình. Kết quả không chứng minh nội dung đầy đủ, đúng hoặc nhất quán về ngữ nghĩa.",
+      "documents": [
+        {
+          "document_type": "MRD",
+          "filename": "XD.BM.03A - Tai lieu MRD.docx",
+          "keywords": [
+            "thị trường mục tiêu",
+            "khách hàng",
+            "phân khúc thị trường"
+          ],
+          "found": [
+            "thị trường mục tiêu",
+            "khách hàng",
+            "phân khúc thị trường"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PRD",
+          "filename": "XD.BM.03B - Tai lieu PRD.docx",
+          "keywords": [
+            "so sánh với các sản phẩm trên thế giới"
+          ],
+          "found": [
+            "so sánh với các sản phẩm trên thế giới"
+          ],
+          "coverage": "found"
+        },
+        {
+          "document_type": "PROPOSAL",
+          "filename": "XD.BM.02A - TTr chu truong cap co so_short.docx",
+          "keywords": [
+            "thị trường và hiệu quả",
+            "nhu cầu của thị trường"
+          ],
+          "found": [
+            "thị trường và hiệu quả",
+            "nhu cầu của thị trường"
+          ],
+          "coverage": "found"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Từ khóa không chứng minh nội dung đúng hoặc đầy đủ.",
+    "Chưa đối chiếu ngữ nghĩa tự động.",
+    "Dấu hiệu biểu mẫu được báo riêng; không tự động chặn kiểm tra từ khóa ở mọi chủ đề.",
+    "Cần người dùng xác minh các điểm thiếu hoặc nghi vấn trước khi đưa ra kết luận."
+  ]
+}

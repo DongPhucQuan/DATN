@@ -3,3 +3,7 @@
 Models/
 *.gguf
 *.safetensors
+
+# Python cache
+__pycache__/
+*.py[cod]
