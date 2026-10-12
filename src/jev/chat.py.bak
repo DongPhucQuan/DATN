@@ -1,0 +1,126 @@
+from src.jev.chat_policy import ChatPolicy
+from src.jev.chat_router import ChatActionRouter
+from src.jev.qwen_decider import JEVQwenDecider
+from src.jev.schemas import JEVQuestion, JEVRequest
+
+
+QUESTIONS = {
+    "category": JEVQuestion(
+        type="choice",
+        instructions=(
+            "Classify the user's latest message."
+        ),
+        criteria=[
+            "normal",
+            "important",
+            "suspicious",
+        ],
+    ),
+    "risk_level": JEVQuestion(
+        type="score",
+        instructions=(
+            "Score the risk level of the user's latest message."
+        ),
+        criteria={
+            "1": "low risk",
+            "2": "medium risk",
+            "3": "high risk",
+        },
+    ),
+    "is_anomaly": JEVQuestion(
+        type="noul",
+        instructions=(
+            "Determine whether the user's latest message "
+            "contains anomalous or suspicious content."
+        ),
+        criteria={},
+    ),
+}
+
+
+class JEVChat:
+    def __init__(self):
+        self.decider = JEVQwenDecider()
+        self.policy = ChatPolicy()
+        self.router = ChatActionRouter()
+
+        self.state = {
+            "session_started": True,
+            "message_count": 0,
+        }
+
+    def process(self, message: str) -> dict:
+        self.state["last_user_message"] = message
+        self.state["message_count"] += 1
+
+        request = JEVRequest(
+            state=self.state,
+            questions=QUESTIONS,
+        )
+
+        decisions = self.decider.decide(request)
+
+        action = self.policy.decide(decisions)
+
+        result = self.router.execute(action)
+
+        self.state["last_action"] = action.action
+        self.state["last_result"] = result
+
+        return {
+            "decisions": decisions.model_dump(),
+            "action": {
+                "name": action.action,
+                "parameters": action.parameters,
+            },
+            "result": result,
+            "state": dict(self.state),
+        }
+
+
+def main():
+    chat = JEVChat()
+
+    print("=" * 60)
+    print("JEV AI — Interactive Prototype")
+    print("Qwen 0.5B + JEV Decision Architecture")
+    print("Type 'exit' to quit.")
+    print("=" * 60)
+
+    while True:
+        try:
+            message = input("\nYou: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nBye.")
+            break
+
+        if not message:
+            continue
+
+        if message.lower() in {"exit", "quit"}:
+            print("Bye.")
+            break
+
+        try:
+            result = chat.process(message)
+
+            print("\nJEV:")
+
+            print("\nDecisions:")
+
+            for name, answer in result["decisions"]["answers"].items():
+                print(f"  {name}: {answer}")
+
+            print("\nAction:")
+            print(f"  {result['action']['name']}")
+
+            print("\nResult:")
+            print(f"  {result['result']}")
+
+        except Exception as exc:
+            print("\nJEV ERROR:")
+            print(f"  {type(exc).__name__}: {exc}")
+
+
+if __name__ == "__main__":
+    main()

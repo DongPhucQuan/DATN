@@ -1,0 +1,42 @@
+JEV CORE v1.0 — COMPLETE CORE PATCH
+
+PURPOSE
+This bundle provides the complete standard generic JEV core files, a local Qwen/llama.cpp adapter update, a demo, and the core contract. It is an overlay patch, not a replacement for the whole JEVDATN repository.
+
+BEFORE APPLYING
+1. Stop the running Python app.
+2. Back up the matching files in your project.
+3. Extract this ZIP into the JEVDATN project root, preserving the `src/jev/` and `src/ai/` paths, and allow overwrite.
+4. Do not delete or replace the finance-specific legacy modules or the experimental world branch.
+
+FILES INCLUDED
+- src/jev/__init__.py
+- src/jev/schemas.py
+- src/jev/state.py
+- src/jev/jev_config.py
+- src/jev/generic_policy.py
+- src/jev/generic_action_router.py
+- src/jev/generic_engine.py
+- src/jev/generic_loop.py
+- src/jev/jev_core.py
+- src/jev/qwen_decider.py
+- src/jev/jev_demo.py
+- src/jev/CORE_CONTRACT.md
+- src/ai/qwen_client.py
+
+WHY `src/ai/qwen_client.py` IS INCLUDED
+The client now supports `check_connection=False`. This lets the core and decider be constructed without a running model server, while actual generation still reports a clear connection error. The default Qwen decider uses this deferred check; it does not disable networking checks when explicitly requested by another caller.
+
+QUICK SMOKE RUN
+From the project root, start llama-server as usual, then run:
+  python -m src.jev.jev_demo
+
+The demo uses the real local Qwen backend by default. To verify the core without a model, inject a small decider implementing `decide(request) -> JEVResponse`.
+
+SCOPE BOUNDARIES
+- `src/jev/engine.py`, `policy.py`, `action_router.py`, `loop.py`: legacy/domain-specific pipeline, left unchanged.
+- `src/jev/world_state.py`, `observation.py`, `world_engine.py`: experimental branch, left unchanged and not integrated into the core.
+- Models and llama.cpp binaries are not included.
+
+COMPATIBILITY NOTE
+The core is built for the project's existing Pydantic v2 style (`model_dump`, `model_validate`). Keep the current project dependencies rather than replacing the environment wholesale.
