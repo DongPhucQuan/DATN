@@ -1,0 +1,141 @@
+{
+  "schema_version": "1.1",
+  "generated_at": "2026-10-20T04:25:17.282932+00:00",
+  "engine": "JEV Semantic Reviewer",
+  "model": "local-model",
+  "base_url": "http://127.0.0.1:8080/v1",
+  "summary": {
+    "documents": 4,
+    "evidence_blocks": 1303,
+    "pairs_reviewed": 6,
+    "pairs_failed": 3,
+    "findings": 0,
+    "rejected_findings": 3
+  },
+  "pair_results": [
+    {
+      "documents_compared": [
+        "BM.01.01.MRD.NV_2023.docx",
+        "BM.01.02.PRD.NV_2023.docx"
+      ],
+      "evidence_blocks_sent": 10,
+      "findings": [],
+      "rejected_findings": [
+        {
+          "index": "0",
+          "title": "Scope Gap: Chỉ định tiêu chuẩn RF và an toàn",
+          "reason": "Thiếu evidence_relationship."
+        }
+      ],
+      "limitations": [
+        "Tài liệu A và B chỉ được so sánh trong phạm vi đề cập đến yêu cầu kỹ thuật và tiêu chuẩn."
+      ],
+      "elapsed_seconds": 206.39
+    },
+    {
+      "documents_compared": [
+        "BM.01.01.MRD.NV_2023.docx",
+        "BM.01.03.TTR.NV_2023.docx"
+      ],
+      "evidence_blocks_sent": 10,
+      "findings": [],
+      "rejected_findings": [
+        {
+          "index": "0",
+          "title": "Lộ trình sản phẩm không nhất quán với yêu cầu",
+          "reason": "Thiếu evidence_relationship."
+        }
+      ],
+      "limitations": [
+        "Tài liệu A và B tập trung vào các chủ đề khác nhau, nên không thể kết luận mâu thuẫn hoặc thiếu sót từ việc hai tài liệu không nhất quán về nội dung."
+      ],
+      "elapsed_seconds": 203.63
+    },
+    {
+      "documents_compared": [
+        "BM.01.01.MRD.NV_2023.docx",
+        "BM.01_Dự toán.xlsx"
+      ],
+      "findings": [],
+      "rejected_findings": [],
+      "error": "JSONDecodeError: Expecting ',' delimiter: line 19 column 10 (char 1156)"
+    },
+    {
+      "documents_compared": [
+        "BM.01.02.PRD.NV_2023.docx",
+        "BM.01.03.TTR.NV_2023.docx"
+      ],
+      "findings": [],
+      "rejected_findings": [],
+      "error": "JSONDecodeError: Expecting ',' delimiter: line 40 column 6 (char 3726)"
+    },
+    {
+      "documents_compared": [
+        "BM.01.02.PRD.NV_2023.docx",
+        "BM.01_Dự toán.xlsx"
+      ],
+      "evidence_blocks_sent": 10,
+      "findings": [],
+      "rejected_findings": [
+        {
+          "index": "0",
+          "title": "Scope Gap: Chi phí nhân công",
+          "reason": "Không có bằng chứng về yêu cầu cụ thể bắt buộc tài liệu bị cho là thiếu phải bao gồm nội dung đó."
+        }
+      ],
+      "limitations": [
+        "Tài liệu A và B tập trung vào các chủ đề khác nhau, nhưng không thể tự động kết luận mâu thuẫn hoặc thiếu sót từ việc này."
+      ],
+      "elapsed_seconds": 188.67
+    },
+    {
+      "documents_compared": [
+        "BM.01.03.TTR.NV_2023.docx",
+        "BM.01_Dự toán.xlsx"
+      ],
+      "findings": [],
+      "rejected_findings": [],
+      "error": "JSONDecodeError: Expecting ',' delimiter: line 26 column 8 (char 2074)"
+    }
+  ],
+  "findings": [],
+  "errors": [
+    {
+      "documents_compared": [
+        "BM.01.01.MRD.NV_2023.docx",
+        "BM.01_Dự toán.xlsx"
+      ],
+      "findings": [],
+      "rejected_findings": [],
+      "error": "JSONDecodeError: Expecting ',' delimiter: line 19 column 10 (char 1156)"
+    },
+    {
+      "documents_compared": [
+        "BM.01.02.PRD.NV_2023.docx",
+        "BM.01.03.TTR.NV_2023.docx"
+      ],
+      "findings": [],
+      "rejected_findings": [],
+      "error": "JSONDecodeError: Expecting ',' delimiter: line 40 column 6 (char 3726)"
+    },
+    {
+      "documents_compared": [
+        "BM.01.03.TTR.NV_2023.docx",
+        "BM.01_Dự toán.xlsx"
+      ],
+      "findings": [],
+      "rejected_findings": [],
+      "error": "JSONDecodeError: Expecting ',' delimiter: line 26 column 8 (char 2074)"
+    }
+  ],
+  "limitations": [
+    "Lựa chọn evidence dùng heuristic từ khóa, chưa dùng embedding.",
+    "Mỗi cặp chỉ gửi một tập con bằng chứng, không phải toàn bộ tài liệu.",
+    "Có thể bỏ sót vấn đề nằm ngoài các đoạn được chọn.",
+    "Xác minh trích dẫn không chứng minh rằng suy luận logic là đúng.",
+    "Các finding được giữ lại vẫn cần con người xác minh.",
+    "scope_gap guard là heuristic bảo thủ; có thể bỏ sót cách diễn đạt đồng nghĩa.",
+    "numeric_guard chỉ kiểm tra sơ bộ việc có số liệu ở hai tài liệu.",
+    "Chỉ xử lý văn bản đã được analyzer trích xuất."
+  ]
+}

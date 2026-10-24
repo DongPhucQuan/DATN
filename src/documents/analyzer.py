@@ -1,305 +1,739 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
-import sys
-from datetime import datetime
+from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from docx import Document
 
 
-DEFAULT_DOCUMENTS = {
-    "MRD": "XD.BM.03A - Tai lieu MRD.docx",
-    "PRD": "XD.BM.03B - Tai lieu PRD.docx",
-    "PROPOSAL": "XD.BM.02A - TTr chu truong cap co so_short.docx",
-}
+ROOT = Path(__file__).resolve().parents[2]
+DOCUMENTS_DIR = ROOT / "data" / "documents"
+REPORTS_DIR = ROOT / "reports"
 
-# Các cụm thường xuất hiện trong biểu mẫu/hướng dẫn điền.
-# Không dùng chúng để tự kết luận toàn bộ tài liệu là vô giá trị.
+DEFAULT_MAX_DOCUMENTS = 50
+
 PLACEHOLDER_PATTERNS = [
-    r"\{[^}]+\}",
-    r"\.{3,}",
-    r"\b20\d{2}\s*\.\s*\.\s*\.",
-    r"\b201\s*\.\s*\.\s*\.",
-    r"\btên nhiệm vụ\b",
-    r"\btên sản phẩm\b",
-    r"\bnêu rõ\b",
-    r"\bliệt kê\b",
-    r"\bnêu mục tiêu\b",
-    r"\bđưa ra kế hoạch\b",
-    r"\bchi tiết .* phụ lục\b",
-    r"\bđiền .* vào\b",
-]
-
-INSTRUCTION_PATTERNS = [
-    r"\bnêu rõ\b",
-    r"\bliệt kê\b",
-    r"\bnêu mục tiêu\b",
-    r"\bđưa ra kế hoạch\b",
-    r"\bchi tiết .* phụ lục\b",
-    r"\bcần .* trình bày\b",
-    r"\bđề nghị .* mô tả\b",
+    re.compile(r"\bTODO\b", re.IGNORECASE),
+    re.compile(r"\bTBD\b", re.IGNORECASE),
+    re.compile(r"\bFIXME\b", re.IGNORECASE),
+    re.compile(r"\bXXX\b"),
+    re.compile(r"\[.*?(?:điền|bổ sung|cập nhật).*?\]", re.IGNORECASE),
+    re.compile(r"<.*?(?:điền|bổ sung|cập nhật).*?>", re.IGNORECASE),
+    re.compile(r"\bchưa\s+(?:xác\s+định|cập\s+nhật|bổ\s+sung)\b", re.IGNORECASE),
 ]
 
 TOPIC_MAP = {
-    "product_requirements": {
-        "label": "Yêu cầu và mô tả sản phẩm",
-        "MRD": ["yêu cầu sản phẩm", "tính năng", "khách hàng"],
-        "PRD": ["tính năng", "chỉ tiêu", "kỹ thuật"],
-        "PROPOSAL": ["sản phẩm", "chỉ tiêu kỹ thuật", "mục tiêu"],
-    },
-    "technology": {
-        "label": "Công nghệ lõi và công nghệ phát triển",
-        "MRD": ["công nghệ", "sản phẩm"],
-        "PRD": ["công nghệ lõi", "công nghệ sử dụng"],
-        "PROPOSAL": ["công nghệ lõi", "làm chủ"],
-    },
-    "schedule": {
-        "label": "Lộ trình và thời gian thực hiện",
-        "MRD": ["lộ trình sản phẩm", "mốc phát triển"],
-        "PRD": ["phiên bản tiếp theo"],
-        "PROPOSAL": ["thời gian thực hiện", "mốc chính", "kế hoạch thực hiện"],
-    },
-    "finance": {
-        "label": "Kinh phí và hiệu quả kinh tế",
-        "MRD": ["chi phí nghiên cứu", "điểm hoàn vốn", "hiệu quả kinh doanh"],
-        "PRD": [],
-        "PROPOSAL": ["kinh phí dự kiến", "hiệu quả kinh tế", "tổng kinh phí"],
-    },
-    "market": {
-        "label": "Thị trường và hiệu quả dự kiến",
-        "MRD": ["thị trường mục tiêu", "khách hàng", "phân khúc thị trường"],
-        "PRD": ["so sánh với các sản phẩm trên thế giới"],
-        "PROPOSAL": ["thị trường và hiệu quả", "nhu cầu của thị trường"],
-    },
+    "purpose_and_scope": [
+        "mục tiêu",
+        "mục đích",
+        "phạm vi",
+        "đối tượng áp dụng",
+        "scope",
+        "objective",
+        "purpose",
+    ],
+    "requirements": [
+        "yêu cầu",
+        "chức năng",
+        "phi chức năng",
+        "requirement",
+        "functional",
+        "non-functional",
+    ],
+    "stakeholders": [
+        "đơn vị",
+        "phòng ban",
+        "người dùng",
+        "bên liên quan",
+        "stakeholder",
+        "user",
+    ],
+    "schedule": [
+        "tiến độ",
+        "thời gian",
+        "giai đoạn",
+        "kế hoạch triển khai",
+        "deadline",
+        "milestone",
+        "schedule",
+    ],
+    "budget": [
+        "kinh phí",
+        "ngân sách",
+        "chi phí",
+        "dự toán",
+        "budget",
+        "cost",
+    ],
+    "risk_and_security": [
+        "rủi ro",
+        "bảo mật",
+        "an toàn thông tin",
+        "phân quyền",
+        "risk",
+        "security",
+        "privacy",
+    ],
+    "acceptance_and_testing": [
+        "nghiệm thu",
+        "kiểm thử",
+        "tiêu chí chấp nhận",
+        "acceptance criteria",
+        "testing",
+        "test case",
+    ],
+    "operation_and_maintenance": [
+        "vận hành",
+        "bảo trì",
+        "bảo hành",
+        "hỗ trợ kỹ thuật",
+        "maintenance",
+        "operation",
+    ],
 }
 
+NUMBER_PATTERN = re.compile(
+    r"""
+    (?<!\w)
+    [-+]?
+    (?:
+        \d{1,3}(?:[.,]\d{3})+
+        |
+        \d+(?:[.,]\d+)?
+    )
+    \s*
+    (?:
+        %|％|
+        triệu|tỷ|nghìn|ngàn|
+        đồng|vnđ|vnd|
+        ngày|tháng|năm|tuần|giờ|phút|
+        người|đơn vị|hệ thống|máy chủ|
+        gb|mb|tb|kb|
+        kg|km|m2|m²|
+        usd|eur|jpy
+    )?
+    (?!\w)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
 
-def normalize_text(value: str) -> str:
-    """Chuẩn hóa khoảng trắng, giữ nguyên Unicode tiếng Việt."""
-    return re.sub(r"\s+", " ", value or "").strip()
+DATE_PATTERNS = [
+    re.compile(r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b"),
+    re.compile(r"\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b"),
+    re.compile(
+        r"\b(?:ngày|tháng|năm)\s+\d{1,4}\b",
+        re.IGNORECASE,
+    ),
+]
+
+MAX_TEXT_CHARS_PER_BLOCK = 12000
 
 
-def find_matches(text: str, patterns: list[str]) -> list[str]:
-    matches = []
-    for pattern in patterns:
-        if re.search(pattern, text, flags=re.IGNORECASE):
-            matches.append(pattern)
-    return matches
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+
+    with path.open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+
+    return digest.hexdigest()
 
 
-def load_docx(path: Path) -> dict[str, Any]:
-    document = Document(path)
-    paragraphs = [normalize_text(p.text) for p in document.paragraphs if normalize_text(p.text)]
+def normalize_text(text: str) -> str:
+    text = text.replace("\xa0", " ")
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
-    table_text: list[str] = []
-    for table in document.tables:
-        for row in table.rows:
-            cells = [normalize_text(cell.text) for cell in row.cells]
-            row_text = " | ".join(cell for cell in cells if cell)
-            if row_text:
-                table_text.append(row_text)
 
-    all_parts = paragraphs + table_text
-    full_text = "\n".join(all_parts)
-    searchable_text = normalize_text(full_text)
-    lowered = searchable_text.casefold()
+def add_block(
+    blocks: list[dict[str, Any]],
+    kind: str,
+    location: str,
+    text: str,
+) -> None:
+    cleaned = normalize_text(text)
 
-    placeholders = find_matches(lowered, PLACEHOLDER_PATTERNS)
-    instruction_matches = find_matches(lowered, INSTRUCTION_PATTERNS)
-    word_count = len(re.findall(r"\b[\wÀ-ỹ]+\b", searchable_text, flags=re.UNICODE))
+    if not cleaned:
+        return
+
+    if len(cleaned) <= MAX_TEXT_CHARS_PER_BLOCK:
+        blocks.append(
+            {
+                "kind": kind,
+                "location": location,
+                "text": cleaned,
+            }
+        )
+        return
+
+    # Preserve long paragraphs/cells as multiple evidence blocks.
+    start = 0
+    part = 1
+
+    while start < len(cleaned):
+        end = min(start + MAX_TEXT_CHARS_PER_BLOCK, len(cleaned))
+
+        if end < len(cleaned):
+            boundary = cleaned.rfind(" ", start, end)
+
+            if boundary > start:
+                end = boundary
+
+        blocks.append(
+            {
+                "kind": kind,
+                "location": f"{location} [part {part}]",
+                "text": cleaned[start:end].strip(),
+            }
+        )
+
+        start = end
+        part += 1
+
+
+def extract_document(path: Path) -> dict[str, Any]:
+    document = Document(str(path))
+    blocks: list[dict[str, Any]] = []
+
+    paragraph_count = 0
+    table_cell_count = 0
+
+    for index, paragraph in enumerate(document.paragraphs, start=1):
+        text = paragraph.text or ""
+
+        if text.strip():
+            paragraph_count += 1
+
+            style_name = ""
+            try:
+                style_name = paragraph.style.name or ""
+            except Exception:
+                pass
+
+            location = f"paragraph {index}"
+
+            if style_name:
+                location += f" (style: {style_name})"
+
+            add_block(
+                blocks=blocks,
+                kind="paragraph",
+                location=location,
+                text=text,
+            )
+
+    for table_index, table in enumerate(document.tables, start=1):
+        for row_index, row in enumerate(table.rows, start=1):
+            for cell_index, cell in enumerate(row.cells, start=1):
+                text = cell.text or ""
+
+                if not text.strip():
+                    continue
+
+                table_cell_count += 1
+
+                location = (
+                    f"table {table_index}, "
+                    f"row {row_index}, "
+                    f"cell {cell_index}"
+                )
+
+                add_block(
+                    blocks=blocks,
+                    kind="table_cell",
+                    location=location,
+                    text=text,
+                )
+
+    combined_text = "\n".join(
+        block["text"]
+        for block in blocks
+    )
 
     return {
         "filename": path.name,
-        "paragraph_count": len(paragraphs),
-        "table_count": len(document.tables),
-        "word_count": word_count,
-        "placeholders": placeholders,
-        "instruction_count": len(instruction_matches),
-        "text": searchable_text,
+        "path": str(path.resolve()),
+        "sha256": sha256_file(path),
+        "text": combined_text,
+        "word_count": len(combined_text.split()),
+        "block_count": len(blocks),
+        "paragraph_count": paragraph_count,
+        "table_cell_count": table_cell_count,
+        "blocks": blocks,
     }
 
 
-def assess_document(doc: dict[str, Any], doc_type: str) -> dict[str, Any]:
-    text = doc.get("text", "")
-    lowered = text.casefold()
-
-    topic_coverage: dict[str, Any] = {}
-    for topic_id, topic in TOPIC_MAP.items():
-        keywords = topic.get(doc_type, [])
-        found = [keyword for keyword in keywords if keyword.casefold() in lowered]
-        topic_coverage[topic_id] = {
-            "label": topic["label"],
-            "keywords_found": found,
-            "keyword_count": len(found),
-            "keyword_total": len(keywords),
-            "status": (
-                "not_applicable"
-                if not keywords
-                else "keywords_found"
-                if found
-                else "keywords_not_found"
-            ),
-        }
-
-    if doc.get("word_count", 0) == 0:
-        status = "empty_or_unreadable"
-    elif doc.get("placeholders") or doc.get("instruction_count", 0) >= 5:
-        status = "template_or_incomplete"
-    else:
-        status = "content_extracted_needs_review"
-
-    return {
-        "filename": doc["filename"],
-        "document_type": doc_type,
-        "status": status,
-        "paragraph_count": doc["paragraph_count"],
-        "table_count": doc["table_count"],
-        "word_count": doc["word_count"],
-        "placeholders": doc["placeholders"],
-        "instruction_count": doc["instruction_count"],
-        "topic_coverage": topic_coverage,
-    }
-
-
-def cross_check(documents: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
-    """Kiểm tra độ phủ từ khóa theo từng chủ đề; chưa kết luận ngữ nghĩa."""
+def detect_placeholders(
+    document: dict[str, Any],
+) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
 
-    for topic_id, topic in TOPIC_MAP.items():
-        participants = []
-        missing_required_docs = []
-
-        for doc_type in ("MRD", "PRD", "PROPOSAL"):
-            if doc_type not in documents:
-                continue
-
-            keywords = topic.get(doc_type, [])
-            text = documents[doc_type].get("text", "")
-            lowered = text.casefold()
-            found = [keyword for keyword in keywords if keyword.casefold() in lowered]
-
-            # Chủ đề có danh sách từ khóa rỗng được xem là không áp dụng,
-            # không phải bằng chứng thiếu nội dung.
-            if keywords and not found:
-                missing_required_docs.append(doc_type)
-
-            participants.append({
-                "document_type": doc_type,
-                "filename": documents[doc_type]["filename"],
-                "keywords": keywords,
-                "found": found,
-                "coverage": (
-                    "not_applicable"
-                    if not keywords
-                    else "found"
-                    if found
-                    else "not_found"
-                ),
-            })
-
-        if missing_required_docs:
-            status = "keywords_missing_in_some_documents"
-            explanation = (
-                "Chưa tìm thấy từ khóa cấu hình cho chủ đề này trong: "
-                + ", ".join(missing_required_docs)
-                + ". Cần kiểm tra thủ công vì cách diễn đạt khác vẫn có thể đáp ứng chủ đề."
-            )
-        else:
-            status = "keyword_coverage_only"
-            explanation = (
-                "Đã kiểm tra độ phủ từ khóa theo cấu hình. "
-                "Kết quả không chứng minh nội dung đầy đủ, đúng hoặc nhất quán về ngữ nghĩa."
-            )
-
-        findings.append({
-            "topic_id": topic_id,
-            "topic": topic["label"],
-            "status": status,
-            "explanation": explanation,
-            "documents": participants,
-        })
+    for block in document["blocks"]:
+        for pattern in PLACEHOLDER_PATTERNS:
+            for match in pattern.finditer(block["text"]):
+                findings.append(
+                    {
+                        "type": "placeholder",
+                        "severity": "medium",
+                        "filename": document["filename"],
+                        "location": block["location"],
+                        "quote": match.group(0),
+                        "message": (
+                            "Phát hiện nội dung có thể chưa hoàn thiện."
+                        ),
+                        "source": "deterministic",
+                    }
+                )
 
     return findings
 
 
-def analyze_folder(folder: Path, output: Path) -> dict[str, Any]:
-    loaded: dict[str, dict[str, Any]] = {}
+def detect_missing_content(
+    document: dict[str, Any],
+) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    text = document["text"].casefold()
 
-    for doc_type, filename in DEFAULT_DOCUMENTS.items():
-        path = folder / filename
-        if not path.is_file():
-            raise FileNotFoundError(f"Thiếu file {filename} trong thư mục {folder}")
+    for topic, keywords in TOPIC_MAP.items():
+        if any(keyword.casefold() in text for keyword in keywords):
+            continue
 
-        doc = load_docx(path)
-        doc["doc_type"] = doc_type
-        loaded[doc_type] = doc
+        findings.append(
+            {
+                "type": "topic_not_detected",
+                "severity": "low",
+                "filename": document["filename"],
+                "location": "whole document",
+                "quote": "",
+                "topic": topic,
+                "message": (
+                    f"Không phát hiện từ khóa đại diện cho chủ đề "
+                    f"'{topic}'. Đây là tín hiệu để rà soát, "
+                    f"không phải bằng chứng chắc chắn rằng tài liệu thiếu."
+                ),
+                "source": "deterministic",
+            }
+        )
 
-    assessments = [
-        assess_document(doc, doc_type)
-        for doc_type, doc in loaded.items()
-    ]
+    return findings
 
-    report = {
-        "project": "JEV Document Analyst",
-        "generated_at": datetime.now().astimezone().isoformat(),
-        "status": "completed",
-        "document_count": len(assessments),
-        "documents": assessments,
-        "cross_document_checks": cross_check(loaded),
-        "limitations": [
-            "Từ khóa không chứng minh nội dung đúng hoặc đầy đủ.",
-            "Chưa đối chiếu ngữ nghĩa tự động.",
-            "Dấu hiệu biểu mẫu được báo riêng; không tự động chặn kiểm tra từ khóa ở mọi chủ đề.",
-            "Cần người dùng xác minh các điểm thiếu hoặc nghi vấn trước khi đưa ra kết luận.",
+
+def extract_numeric_mentions(
+    document: dict[str, Any],
+) -> list[dict[str, Any]]:
+    mentions: list[dict[str, Any]] = []
+
+    for block in document["blocks"]:
+        text = block["text"]
+
+        for pattern in DATE_PATTERNS:
+            for match in pattern.finditer(text):
+                mentions.append(
+                    {
+                        "kind": "date",
+                        "value": match.group(0),
+                        "filename": document["filename"],
+                        "location": block["location"],
+                        "context": text[
+                            max(0, match.start() - 100):
+                            min(len(text), match.end() + 100)
+                        ],
+                    }
+                )
+
+        for match in NUMBER_PATTERN.finditer(text):
+            mentions.append(
+                {
+                    "kind": "number_or_measure",
+                    "value": match.group(0).strip(),
+                    "filename": document["filename"],
+                    "location": block["location"],
+                    "context": text[
+                        max(0, match.start() - 100):
+                        min(len(text), match.end() + 100)
+                    ],
+                }
+            )
+
+    return mentions
+
+
+def assess_document(
+    document: dict[str, Any],
+) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+
+    findings.extend(detect_placeholders(document))
+    findings.extend(detect_missing_content(document))
+
+    topic_coverage: dict[str, Any] = {}
+    text = document["text"].casefold()
+
+    for topic, keywords in TOPIC_MAP.items():
+        matched = [
+            keyword
+            for keyword in keywords
+            if keyword.casefold() in text
+        ]
+
+        topic_coverage[topic] = {
+            "detected": bool(matched),
+            "matched_keywords": matched,
+        }
+
+    return {
+        "filename": document["filename"],
+        "path": document["path"],
+        "sha256": document["sha256"],
+        "word_count": document["word_count"],
+        "block_count": document["block_count"],
+        "paragraph_count": document["paragraph_count"],
+        "table_cell_count": document["table_cell_count"],
+        "topic_coverage": topic_coverage,
+        "findings": findings,
+        "numeric_mentions": extract_numeric_mentions(document),
+        # Critical: semantic_review.py consumes these evidence blocks.
+        "blocks": [
+            {
+                "kind": block["kind"],
+                "location": block["location"],
+                "text": block["text"],
+            }
+            for block in document["blocks"]
         ],
     }
 
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(
+
+def find_duplicate_groups(
+    documents: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    by_hash: dict[str, list[str]] = defaultdict(list)
+
+    for document in documents:
+        by_hash[document["sha256"]].append(document["filename"])
+
+    return [
+        {
+            "filenames": filenames,
+            "count": len(filenames),
+            "type": "identical_file_content",
+        }
+        for filenames in by_hash.values()
+        if len(filenames) > 1
+    ]
+
+
+def find_cross_document_candidates(
+    documents: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Tạo các cặp tài liệu cần đối chiếu sâu hơn.
+
+    Đây chỉ là bước sàng lọc bằng dấu hiệu từ khóa và số liệu.
+    Nó chưa khẳng định hai tài liệu mâu thuẫn.
+    """
+    candidates: list[dict[str, Any]] = []
+
+    for left_index in range(len(documents)):
+        left = documents[left_index]
+
+        for right_index in range(left_index + 1, len(documents)):
+            right = documents[right_index]
+
+            left_topics = {
+                topic
+                for topic, info in left["topic_coverage"].items()
+                if info["detected"]
+            }
+
+            right_topics = {
+                topic
+                for topic, info in right["topic_coverage"].items()
+                if info["detected"]
+            }
+
+            shared_topics = sorted(left_topics & right_topics)
+
+            left_numbers = {
+                mention["value"].casefold()
+                for mention in left["numeric_mentions"]
+            }
+
+            right_numbers = {
+                mention["value"].casefold()
+                for mention in right["numeric_mentions"]
+            }
+
+            shared_numbers = sorted(left_numbers & right_numbers)
+
+            candidates.append(
+                {
+                    "left": left["filename"],
+                    "right": right["filename"],
+                    "shared_topics": shared_topics,
+                    "shared_number_count": len(shared_numbers),
+                    "shared_numbers_sample": shared_numbers[:20],
+                    "reason": (
+                        "shared_topics"
+                        if shared_topics
+                        else "pairwise_screening"
+                    ),
+                }
+            )
+
+    return candidates
+
+
+def build_markdown_report(report: dict[str, Any]) -> str:
+    lines: list[str] = [
+        "# JEV Document Analysis",
+        "",
+        f"- Generated at: {report['generated_at']}",
+        f"- Documents found: {report['documents_found']}",
+        f"- Documents selected: {report['documents_selected']}",
+        f"- Documents read: {report['documents_read']}",
+        f"- Read errors: {report['read_errors']}",
+        f"- Findings: {report['finding_count']}",
+        f"- Cross-document candidates: "
+        f"{len(report['cross_document_candidates'])}",
+        "",
+        "## Documents",
+        "",
+    ]
+
+    for document in report["documents"]:
+        lines.extend(
+            [
+                f"### {document['filename']}",
+                "",
+                f"- Words: {document['word_count']}",
+                f"- Evidence blocks: {document['block_count']}",
+                f"- Paragraphs: {document['paragraph_count']}",
+                f"- Table cells: {document['table_cell_count']}",
+                f"- SHA-256: `{document['sha256']}`",
+                "",
+                "#### Topic coverage",
+                "",
+            ]
+        )
+
+        for topic, info in document["topic_coverage"].items():
+            status = "detected" if info["detected"] else "not detected"
+            matched = ", ".join(info["matched_keywords"]) or "—"
+            lines.append(f"- **{topic}**: {status}; keywords: {matched}")
+
+        lines.extend(["", "#### Findings", ""])
+
+        if not document["findings"]:
+            lines.append("- No deterministic findings.")
+        else:
+            for finding in document["findings"]:
+                lines.append(
+                    f"- [{finding['severity']}] "
+                    f"{finding['type']} — {finding['location']}: "
+                    f"{finding['message']}"
+                )
+
+        lines.extend(["", "#### Numeric/date mentions", ""])
+
+        if not document["numeric_mentions"]:
+            lines.append("- No numeric/date mentions detected.")
+        else:
+            for mention in document["numeric_mentions"][:100]:
+                lines.append(
+                    f"- `{mention['value']}` — {mention['location']}: "
+                    f"{mention['context']}"
+                )
+
+        lines.append("")
+
+    lines.extend(["## Cross-document candidates", ""])
+
+    if not report["cross_document_candidates"]:
+        lines.append("- No pairs to compare.")
+    else:
+        for candidate in report["cross_document_candidates"]:
+            topics = ", ".join(candidate["shared_topics"]) or "none detected"
+            lines.append(
+                f"- **{candidate['left']}** ↔ **{candidate['right']}**; "
+                f"shared topics: {topics}; "
+                f"shared number strings: "
+                f"{candidate['shared_number_count']}"
+            )
+
+    lines.extend(
+        [
+            "",
+            "## Limitations",
+            "",
+            "- Keyword coverage is a screening signal, not proof of completeness.",
+            "- Numeric mentions are extracted as text; equivalent values may differ in formatting.",
+            "- Cross-document candidates are not confirmed contradictions.",
+            "- DOCX text extraction may not include text inside images or scanned pages.",
+            "- Header/footer content, text boxes, tracked changes, and embedded objects "
+            "may not be fully captured.",
+            "",
+        ]
+    )
+
+    return "\n".join(lines)
+
+
+def collect_docx_files(
+    directory: Path,
+    max_documents: int,
+) -> tuple[list[Path], int]:
+    if not directory.exists():
+        return [], 0
+
+    all_files = sorted(
+        (
+            path
+            for path in directory.rglob("*.docx")
+            if path.is_file() and not path.name.startswith("~$")
+        ),
+        key=lambda path: str(path).casefold(),
+    )
+
+    return all_files[:max_documents], len(all_files)
+
+
+def run_analysis(
+    documents_dir: Path = DOCUMENTS_DIR,
+    reports_dir: Path = REPORTS_DIR,
+    max_documents: int = DEFAULT_MAX_DOCUMENTS,
+) -> dict[str, Any]:
+    if max_documents < 1:
+        raise ValueError("max_documents must be at least 1")
+
+    reports_dir.mkdir(parents=True, exist_ok=True)
+
+    selected_paths, documents_found = collect_docx_files(
+        documents_dir,
+        max_documents,
+    )
+
+    assessed_documents: list[dict[str, Any]] = []
+    read_errors: list[dict[str, str]] = []
+
+    for path in selected_paths:
+        try:
+            extracted = extract_document(path)
+            assessed_documents.append(assess_document(extracted))
+        except Exception as error:
+            read_errors.append(
+                {
+                    "filename": path.name,
+                    "path": str(path.resolve()),
+                    "error": f"{type(error).__name__}: {error}",
+                }
+            )
+
+    all_findings = [
+        finding
+        for document in assessed_documents
+        for finding in document["findings"]
+    ]
+
+    report: dict[str, Any] = {
+        "schema_version": "1.1",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "documents_directory": str(documents_dir.resolve()),
+        "reports_directory": str(reports_dir.resolve()),
+        "max_documents": max_documents,
+        "documents_found": documents_found,
+        "documents_selected": len(selected_paths),
+        "documents_read": len(assessed_documents),
+        "read_errors": len(read_errors),
+        "read_error_details": read_errors,
+        "finding_count": len(all_findings),
+        "documents": assessed_documents,
+        "duplicate_groups": find_duplicate_groups(assessed_documents),
+        "cross_document_candidates": find_cross_document_candidates(
+            assessed_documents
+        ),
+    }
+
+    json_path = reports_dir / "document_analysis.json"
+    markdown_path = reports_dir / "document_analysis.md"
+
+    json_path.write_text(
         json.dumps(report, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+
+    markdown_path.write_text(
+        build_markdown_report(report),
+        encoding="utf-8",
+    )
+
+    print("=== JEV DOCUMENT ANALYZER ===")
+    print(
+        json.dumps(
+            {
+                "documents_found": report["documents_found"],
+                "documents_selected": report["documents_selected"],
+                "documents_read": report["documents_read"],
+                "read_errors": report["read_errors"],
+                "document_findings": report["finding_count"],
+                "cross_document_candidates": len(
+                    report["cross_document_candidates"]
+                ),
+                "duplicate_groups": len(report["duplicate_groups"]),
+                "evidence_blocks": sum(
+                    len(document.get("blocks", []))
+                    for document in report["documents"]
+                ),
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+
+    print(f"JSON: {json_path}")
+    print(f"Markdown: {markdown_path}")
+
     return report
 
 
-def main() -> int:
+def main() -> None:
     parser = argparse.ArgumentParser(
-        description="JEV Document Analyst — phân tích 3 file Word"
+        description="Analyze and screen up to 50 DOCX documents for JEV."
     )
     parser.add_argument(
-        "--documents",
-        default="data/documents",
-        help="Thư mục chứa đúng 3 file DOCX",
+        "--documents-dir",
+        type=Path,
+        default=DOCUMENTS_DIR,
+        help="Directory containing DOCX documents.",
     )
     parser.add_argument(
-        "--output",
-        default="reports/document_analysis.json",
-        help="Đường dẫn báo cáo JSON",
+        "--reports-dir",
+        type=Path,
+        default=REPORTS_DIR,
+        help="Directory for generated reports.",
     )
+    parser.add_argument(
+        "--max-documents",
+        type=int,
+        default=DEFAULT_MAX_DOCUMENTS,
+        help="Maximum number of DOCX files to process (default: 50).",
+    )
+
     args = parser.parse_args()
 
-    folder = Path(args.documents)
-    output = Path(args.output)
-
-    try:
-        report = analyze_folder(folder, output)
-    except Exception as exc:
-        print(f"[ERROR] {exc}", file=sys.stderr)
-        return 1
-
-    print("=== JEV DOCUMENT ANALYST ===")
-    print(f"Documents: {report['document_count']}")
-    print(f"Status: {report['status']}")
-    print(f"Report: {output}")
-    for doc in report["documents"]:
-        print(f"- {doc['document_type']}: {doc['filename']} -> {doc['status']}")
-    print("Lưu ý: keyword coverage chưa phải đối chiếu ngữ nghĩa.")
-    return 0
+    run_analysis(
+        documents_dir=args.documents_dir,
+        reports_dir=args.reports_dir,
+        max_documents=args.max_documents,
+    )
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
